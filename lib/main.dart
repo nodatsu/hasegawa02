@@ -41,7 +41,7 @@ class _MyHomePageState extends State<MyHomePage> {
           OutlinedButton(
             onPressed: () async {
               await signInFirebase();
-              // await addPicture();
+              await addPicture();
               await signOutFirebase();
             },
             child: Text('画像追加'),
@@ -62,5 +62,25 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> signOutFirebase() async {
     await FirebaseAuth.instance.signOut();
+  }
+
+  Future<void> addPicture() async {
+    final FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+    );
+
+    if (result != null) {
+      final User user = FirebaseAuth.instance.currentUser!;
+
+      final int timestamp = DateTime.now().microsecondsSinceEpoch;
+      final File file = File(result.files.single.path!);
+      final String name = file.path.split('/').last;
+      final String path = '${timestamp}_$name';
+      final TaskSnapshot task = await FirebaseStorage.instance
+          .ref()
+          .child('users/${user.uid}/photos') // フォルダ名
+          .child(path) // ファイル名
+          .putFile(file); // 画像ファイル
+    }
   }
 }
